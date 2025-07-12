@@ -8,6 +8,12 @@ class Solution:
         self.chromosome = chromosome
         self.generation = generation
 
+    def __str__(self) -> str:
+        rows = []
+        for row in self.render_matrix():
+            rows.append(" ".join("Q" if cell == 1 else "." for cell in row))
+        return "\n".join(rows)
+
     def render_matrix(self) -> NDArray:
         """Creates a matrix version of chessboard where 1 denotes the queen places and 0 denoted empty box"""
         n = len(self.chromosome)
@@ -108,7 +114,6 @@ class NQueen:
             selected = self.selection(percent)
             self.crossover(selected)
             self.mutation()  # Finally make some mutation
-        print("Sorry! Unable to find Solution. Try increasing number of Generations or pairs of Chromosomes")
 
 
 def main():
@@ -120,8 +125,11 @@ def main():
 
     q = NQueen(n, chromosome_count)
     solution = q.solve(generation)
-    print(f"Found solution in {solution.generation} generations!")
-    print(solution.render_matrix())
+    if solution.generation:
+        print(f"Found solution in {solution.generation} generations!")
+        print(solution)
+    else:
+        print("Sorry! Unable to find Solution. Try increasing number of Generations or pairs of Chromosomes")
 
 
 if __name__ == "__main__":
