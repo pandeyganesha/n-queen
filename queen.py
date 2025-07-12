@@ -10,21 +10,37 @@ class ExitLoop(Exception):
     pass
 
 
-class nqueen:
-    def __init__(self, n) -> None:
-        self.n = n
+class Solution:
+
+    def __init__(self, solution_array):
+        self.solution_array = solution_array
+
+    def matrix_render(self):
+        """ Creates a matrix version of chessboard where 1 denotes the queen places and 0 denoted empty box"""
+        n = len(self.solution_array)
+        chess = np.zeros((n, n), dtype=int)
+        for row in range(n):
+            chess[self.solution_array[row]][row]=1
+        return chess
+
+class NQueen:
+    def __init__(self, n, chromosome_count) -> None:
+        self.n = self.sanitized_n(n)
         self.population = None
-        # Change the CHROMOSOME_COUNT accordingly and keep the number even else code might not behave as expected
-        self.CHROMOSOME_COUNT = 50
-        self.solution(generation=10000)
+        self.chromosome_count = chromosome_count
         self.ans = None
+
+    def sanitized_n(self, n):
+        if n <=3:
+            raise ValueError("Value of n must be greater than 3")
+        return n
 
     def populate(self):
         """It creates a population of random places (chromosome) for queens in each column.
         We will be taking even number for population for easy crossing over. (Won't create any differnce in working of This algo.)"""
 
         self.population = np.random.randint(
-            0, self.n, size=(self.CHROMOSOME_COUNT, self.n))
+            0, self.n, size=(self.chromosome_count, self.n))
 
     def fitness(self):
         """It will calculate the fitness in percentage for each chromosome."""
@@ -44,14 +60,15 @@ class nqueen:
                         pair += 1
 
             if pair == mxm:
-                self.ans = self.population[ind1]
+                self.ans = Solution(self.population[ind1])
                 raise ExitLoop
+                
             fit.append(pair)
 
         total = sum(fit)
 
         fit_perecent = [round((fit[i]*100/total), 2)
-                        for i in range(self.CHROMOSOME_COUNT)]
+                        for i in range(self.chromosome_count)]
         return fit_perecent
 
     def check_attack(self, cord1, cord2):
@@ -72,12 +89,12 @@ class nqueen:
     def selection(self, percent):
         """For producing the next generation, it will create parents on the basis of fitness and probability and will also select the crossing over point."""
         selected = random.choices(
-            np.arange(0, self.CHROMOSOME_COUNT), percent, k=self.CHROMOSOME_COUNT)
+            np.arange(0, self.chromosome_count), percent, k=self.chromosome_count)
         return selected
 
     def crossover(self, sel):
         """The actual process of crossing over will be performed here."""
-        new_pop = np.empty((self.CHROMOSOME_COUNT, self.n), dtype=int)
+        new_pop = np.empty((self.chromosome_count, self.n), dtype=int)
         for i in range(0, len(sel), 2):
             # crossing of the genes at random points
             point = random.randint(1, self.n-1)
@@ -96,15 +113,15 @@ class nqueen:
             val = random.randint(0, self.n-1)
             chrom[place] = val  # random mutation taking place
 
-    def solution(self, generation):
+    def solve(self, generation):
         """This function would be responsible for generations of the population"""
         self.populate()  # Generate random population
         for i in range(generation):
             try:
                 percent = self.fitness()  # Then calculate the fitness of each
             except ExitLoop:  # if an error occurs , it stops the generation showing that it has got the best solution
-                print(str(i)+"th generation resulted : ", self.ans)
-                print(matrix_render(self.ans))
+                print(str(i)+"th generation resulted : ", self.ans.solution_array)
+                print(self.ans.matrix_render())
                 exit()
             # on the basis of fitness, select randomly
             selected = self.selection(percent)
@@ -116,11 +133,13 @@ class nqueen:
 
 def main():
     n = int(input("Enter the number of queens to be placed : "))
-    if n <= 3:
-        print("Enter n>=4")
-        return
 
-    q = nqueen(n)  # Number of queens
+    # Change the chromosome_count accordingly and keep the number even else code might not behave as expected
+    chromosome_count = 500
+    generation = 10000
+
+    q = NQueen(n, chromosome_count)
+    solution = q.solve(generation)
 
 
 if __name__ == "__main__":
