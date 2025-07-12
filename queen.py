@@ -4,18 +4,18 @@ from numpy.typing import NDArray
 
 
 class Solution:
-
-    def __init__(self, chromosome, generation = None):
+    def __init__(self, chromosome, generation=None):
         self.chromosome = chromosome
         self.generation = generation
 
     def render_matrix(self) -> NDArray:
-        """ Creates a matrix version of chessboard where 1 denotes the queen places and 0 denoted empty box"""
+        """Creates a matrix version of chessboard where 1 denotes the queen places and 0 denoted empty box"""
         n = len(self.chromosome)
         chess = np.zeros((n, n), dtype=int)
         for row in range(n):
-            chess[self.chromosome[row]][row]=1
+            chess[self.chromosome[row]][row] = 1
         return chess
+
 
 class NQueen:
 
@@ -25,26 +25,23 @@ class NQueen:
         self.chromosome_count = chromosome_count
         self.ans = None
         self.max_pairs = ((self.n-1)*self.n)//2
-        self.populate()  # Generate random population
+        self.populate()
 
     def sanitized_n(self, n: int) -> int:
-        if n <=3:
+        if n <= 3:
             raise ValueError("Value of n must be greater than 3")
         return n
 
     def populate(self):
-        """It creates a population of random places (chromosome) for queens in each column.
-        We will be taking even number for population for easy crossing over. (Won't create any differnce in working of This algo.)"""
-
+        """It creates a population of random places (chromosome) for queens in each column."""
         self.population = np.random.randint(
             0, self.n, size=(self.chromosome_count, self.n))
 
     def fitness(self):
         """It will calculate the fitness in percentage for each chromosome."""
-
         fit = []
-        fit_perecent = []
-        # iterate over each chromosome
+        fit_percent = []
+        
         for ind, chromosome in enumerate(self.population):
             pair = 0
 
@@ -62,28 +59,22 @@ class NQueen:
             fit.append(pair)
 
         total = sum(fit)
-
-        fit_perecent = [round((fit[i]*100/total), 2)
-                        for i in range(self.chromosome_count)]
-        return fit_perecent
+        if total == 0:
+            fit_percent = [1.0] * self.chromosome_count
+        else:
+            fit_percent = [round((fit[i]*100/total), 2) for i in range(self.chromosome_count)]
+        return fit_percent
 
     def check_attack(self, cord1: int, cord2: int) -> bool:
-        """
-        returns True if pair are attacking each other else False
-        """
-
-        # if queens in same row
+        """returns True if pair are attacking each other else False"""
         if cord1[0] == cord2[0]:
             return True
-
-        # if queens in same diagonal
         if abs(cord1[0]-cord2[0]) == abs(cord1[1]-cord2[1]):
             return True
-
         return False
 
     def selection(self, percent: list) -> list:
-        """For producing the next generation, it will create parents on the basis of fitness and probability and will also select the crossing over point."""
+        """For producing the next generation, it will create parents on the basis of fitness and probability."""
         selected = random.choices(
             np.arange(0, self.chromosome_count), percent, k=self.chromosome_count)
         return selected
@@ -92,10 +83,7 @@ class NQueen:
         """The actual process of crossing over will be performed here."""
         new_pop = np.empty((self.chromosome_count, self.n), dtype=int)
         for i in range(0, len(sel), 2):
-            # crossing of the genes at random points
             point = random.randint(1, self.n-1)
-
-            # Used List Slicing techniques here
             new_pop[i][:point] = self.population[sel[i]][:point]
             new_pop[i+1][:point] = self.population[sel[i+1]][:point]
             new_pop[i][point:] = self.population[sel[i+1]][point:]
@@ -103,23 +91,21 @@ class NQueen:
         self.population = new_pop
 
     def mutation(self):
-        """"Some random mutation would be applied to the populations analogous to the evolution."""
+        """Some random mutation would be applied to the populations analogous to the evolution."""
         for chrom in self.population:
             place = random.randint(0, self.n-1)
             val = random.randint(0, self.n-1)
-            chrom[place] = val  # random mutation taking place
+            chrom[place] = val
 
     def solve(self, generation: int):
         """This function would be responsible for generations of the population"""
         for i in range(generation):
-            percent = self.fitness()  # Then calculate the fitness of each
+            percent = self.fitness()
             if self.ans:
                 self.ans.generation = i + 1
                 return self.ans
-
-            # on the basis of fitness, select randomly
+            
             selected = self.selection(percent)
-            # Do crossing over among the selected chromosomes.
             self.crossover(selected)
             self.mutation()  # Finally make some mutation
         print("Sorry! Unable to find Solution. Try increasing number of Generations or pairs of Chromosomes")
