@@ -1,22 +1,25 @@
 import random
 import numpy as np
+from numpy.typing import NDArray
 
 
 class Solution:
 
-    def __init__(self, solution_array):
-        self.solution_array = solution_array
+    def __init__(self, chromosome, generation = None):
+        self.chromosome = chromosome
+        self.generation = generation
 
-    def matrix_render(self):
+    def render_matrix(self) -> NDArray:
         """ Creates a matrix version of chessboard where 1 denotes the queen places and 0 denoted empty box"""
-        n = len(self.solution_array)
+        n = len(self.chromosome)
         chess = np.zeros((n, n), dtype=int)
         for row in range(n):
-            chess[self.solution_array[row]][row]=1
+            chess[self.chromosome[row]][row]=1
         return chess
 
 class NQueen:
-    def __init__(self, n, chromosome_count) -> None:
+
+    def __init__(self, n: int, chromosome_count: int) -> None:
         self.n = self.sanitized_n(n)
         self.population = None
         self.chromosome_count = chromosome_count
@@ -24,7 +27,7 @@ class NQueen:
         self.max_pairs = ((self.n-1)*self.n)//2
         self.populate()  # Generate random population
 
-    def sanitized_n(self, n):
+    def sanitized_n(self, n: int) -> int:
         if n <=3:
             raise ValueError("Value of n must be greater than 3")
         return n
@@ -42,19 +45,19 @@ class NQueen:
         fit = []
         fit_perecent = []
         # iterate over each chromosome
-        for ind1, pop in enumerate(self.population):
+        for ind, chromosome in enumerate(self.population):
             pair = 0
 
             # nested for loop to iterate over each value of chromosome and do comparisons with each pair possible.
-            for i in range(len(pop)):
-                for j in range(i+1, len(pop)):
+            for i in range(len(chromosome)):
+                for j in range(i+1, len(chromosome)):
 
                     # If a pair of queen is not attacking each other then + 1
-                    if not self.check_attack((pop[i], i), (pop[j], j)):
+                    if not self.check_attack((chromosome[i], i), (chromosome[j], j)):
                         pair += 1
 
             if pair == self.max_pairs:
-                self.ans = Solution(self.population[ind1])
+                self.ans = Solution(self.population[ind])
                 
             fit.append(pair)
 
@@ -64,7 +67,7 @@ class NQueen:
                         for i in range(self.chromosome_count)]
         return fit_perecent
 
-    def check_attack(self, cord1, cord2):
+    def check_attack(self, cord1: int, cord2: int) -> bool:
         """
         returns True if pair are attacking each other else False
         """
@@ -79,13 +82,13 @@ class NQueen:
 
         return False
 
-    def selection(self, percent):
+    def selection(self, percent: list) -> list:
         """For producing the next generation, it will create parents on the basis of fitness and probability and will also select the crossing over point."""
         selected = random.choices(
             np.arange(0, self.chromosome_count), percent, k=self.chromosome_count)
         return selected
 
-    def crossover(self, sel):
+    def crossover(self, sel: list):
         """The actual process of crossing over will be performed here."""
         new_pop = np.empty((self.chromosome_count, self.n), dtype=int)
         for i in range(0, len(sel), 2):
@@ -106,12 +109,14 @@ class NQueen:
             val = random.randint(0, self.n-1)
             chrom[place] = val  # random mutation taking place
 
-    def solve(self, generation):
+    def solve(self, generation: int):
         """This function would be responsible for generations of the population"""
         for i in range(generation):
             percent = self.fitness()  # Then calculate the fitness of each
             if self.ans:
+                self.ans.generation = i + 1
                 return self.ans
+
             # on the basis of fitness, select randomly
             selected = self.selection(percent)
             # Do crossing over among the selected chromosomes.
@@ -129,7 +134,8 @@ def main():
 
     q = NQueen(n, chromosome_count)
     solution = q.solve(generation)
-    print(solution.matrix_render())
+    print(f"Found solution in {solution.generation} generations!")
+    print(solution.render_matrix())
 
 
 if __name__ == "__main__":
